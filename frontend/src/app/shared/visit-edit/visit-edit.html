@@ -1,0 +1,58 @@
+<div class="overlay" (click)="closed.emit()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="visit-edit-title"
+       (click)="$event.stopPropagation()">
+    <div class="modal-h">
+      <h2 id="visit-edit-title">Modifier la visite #{{ visit().id }}</h2>
+      <button type="button" class="x" aria-label="Fermer" (click)="closed.emit()">✕</button>
+    </div>
+    <div class="edit-summary">
+      <strong>{{ visit().visitor.fullName }}</strong>
+      · arrivée le {{ visit().checkInAt | date:'dd/MM/yyyy HH:mm' }}
+      · {{ statusLabel[visit().status] }}
+    </div>
+    @if (error()) { <div class="edit-error">{{ error() }}</div> }
+    <form (ngSubmit)="save()">
+      <div class="edit-form">
+        <div>
+          <label for="visit-host-name">Nom de l'employé hôte *</label>
+          <div class="combo">
+            <input id="visit-host-name" name="empName" [(ngModel)]="empName" (input)="onSearchEmp('name')"
+                   autocomplete="off" placeholder="Taper pour chercher..." />
+            @if (empField() === 'name' && suggestions().length) {
+              <ul>
+                @for (e of suggestions(); track e.id) {
+                  <li><button type="button" (click)="pickEmp(e)">{{ e.fullName }} — {{ e.matricule }}<small>{{ e.poste }}</small></button></li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+        <div>
+          <label for="visit-host-matricule">Matricule *</label>
+          <div class="combo">
+            <input id="visit-host-matricule" name="empMatricule" [(ngModel)]="empMatricule"
+                   (input)="onSearchEmp('matricule')" autocomplete="off" placeholder="Ex. EMP2030" />
+            @if (empField() === 'matricule' && suggestions().length) {
+              <ul>
+                @for (e of suggestions(); track e.id) {
+                  <li><button type="button" (click)="pickEmp(e)">{{ e.matricule }} — {{ e.fullName }}<small>{{ e.poste }}</small></button></li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+        <p class="hint full">La direction de la visite suit celle de l'employé hôte.</p>
+        <div><label for="visit-badge">Badge *</label>
+          <input id="visit-badge" name="badgeNumber" [(ngModel)]="form.badgeNumber" maxlength="20" /></div>
+        <div class="full"><label for="visit-purpose">Motif *</label>
+          <input id="visit-purpose" name="purpose" [(ngModel)]="form.purpose" maxlength="255" /></div>
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="cancel" (click)="closed.emit()">Annuler</button>
+        <button type="submit" class="save" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

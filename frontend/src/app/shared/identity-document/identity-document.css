@@ -1,0 +1,15 @@
+.identity { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; background: #f8fafc; }
+.head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.title { font-size: 12px; font-weight: 600; color: #475569; }
+.upload {
+  background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px;
+  cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ora-green);
+}
+.upload.disabled { opacity: .6; cursor: wait; }
+img {
+  display: block; max-width: 100%; max-height: 260px; border-radius: 6px;
+  border: 1px solid #e2e8f0; background: white; object-fit: contain;
+}
+.pdf { color: var(--ora-green); font-weight: 600; font-size: 13px; }
+.muted { color: #64748b; font-size: 12px; }
+.error { background: #fef2f2; color: #dc2626; padding: 8px 10px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; }

@@ -1,0 +1,16 @@
+.confirm-overlay { z-index: 70; }
+.modal { max-width: 460px; }
+
+.confirm-body { margin: 18px 20px; font-size: 14px; line-height: 1.5; color: #1e293b; }
+.confirm-body p + p { margin-top: 8px; }
+.confirm-body .message { font-weight: 600; }
+.confirm-body .detail { color: #475569; font-size: 13px; }
+.confirm-body .warn {
+  margin-top: 12px; padding: 8px 12px; border-radius: 8px; font-size: 13px;
+  background: #fef2f2; color: #b91c1c;
+}
+
+.edit-actions .confirm { background: var(--ora-green-light); color: white; border: none; }
+.edit-actions .confirm:hover { background: var(--ora-green); }
+.edit-actions .confirm.danger { background: #b91c1c; }
+.edit-actions .confirm.danger:hover { background: #991b1b; }

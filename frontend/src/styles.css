@@ -1,0 +1,111 @@
+:root {
+  --ora-green: #0e6520;
+  --ora-green-light: #2c972e;
+  --ora-green-200: #abd5ab;
+  --ora-green-50: #edf5ee;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f4f6f9;
+  color: #1e293b;
+}
+button { font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+button, .file-btn {
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  button, .file-btn { transition: none; }
+}
+
+body button.btn-primary:hover:not(:disabled),
+body button.btn-export:hover:not(:disabled),
+body .edit-actions .save:hover:not(:disabled) { background: var(--ora-green); }
+
+body button.btn-sec:hover:not(:disabled),
+body button.btn-reset:hover:not(:disabled),
+body button.btn-id:hover:not(:disabled),
+body .edit-actions .cancel:hover:not(:disabled) { background: #f8fafc; }
+
+body button.btn-id.missing:hover:not(:disabled) { background: #e3eee4; }
+body button.btn-ok:hover:not(:disabled) { background: #047857; }
+body button.link:hover:not(:disabled) { color: var(--ora-green-light); }
+.modal-h .x:hover { color: #475569; }
+
+body input:focus, body select:focus, body textarea:focus {
+  outline: none;
+  border-color: var(--ora-green-200);
+  box-shadow: 0 0 0 3px #e6efe8;
+}
+
+.overlay {
+  position: fixed; inset: 0; background: rgba(6,32,43,.55);
+  display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px;
+}
+.modal {
+  background: white; border-radius: 12px; width: 100%; max-width: 600px;
+  padding: 0; max-height: 90vh; overflow: auto;
+}
+.modal-h {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;
+}
+.modal-h h2 { font-size: 17px; margin: 0; }
+.modal-h .x { background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; padding: 0; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 20px; }
+.info-grid .full { grid-column: 1 / -1; }
+.info-grid span { display: block; font-size: 11px; color: #64748b; margin-bottom: 2px; }
+.info-grid strong { font-size: 14px; color: #0f172a; word-break: break-word; }
+@media (max-width: 560px) { .info-grid { grid-template-columns: 1fr; } }
+
+.badge {
+  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.badge.en-cours { background: #ecfdf5; color: #047857; }
+.badge.terminee { background: #f1f5f9; color: #475569; }
+.badge.annulee { background: #fef2f2; color: #b91c1c; }
+
+.edit-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 20px; }
+.edit-form .full { grid-column: 1 / -1; }
+.edit-form label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569; }
+.edit-form input, .edit-form select {
+  width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: white;
+}
+.edit-form input:disabled { background: #f8fafc; color: #64748b; cursor: not-allowed; }
+.edit-form .hint { font-size: 12px; color: #64748b; margin-top: 4px; }
+.edit-summary {
+  margin: 16px 20px 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; color: #475569;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+}
+.edit-error { margin: 16px 20px 0; background: #fef2f2; color: #dc2626; padding: 10px 12px; border-radius: 8px; }
+.edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin: 0 20px 20px; }
+.edit-actions button { padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.edit-actions .cancel { background: white; color: #1e293b; border: 1px solid #e2e8f0; }
+.edit-actions .save { background: var(--ora-green-light); color: white; border: none; }
+.edit-actions button:disabled { opacity: .6; cursor: not-allowed; }
+@media (max-width: 560px) { .edit-form { grid-template-columns: 1fr; } }
+
+body button.btn-edit {
+  background: white; color: var(--ora-green); border: 1px solid var(--ora-green-200); padding: 6px 12px;
+  border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+body button.btn-edit:hover:not(:disabled) { background: var(--ora-green-50); }
+body button.btn-edit:disabled { opacity: .55; cursor: not-allowed; }
+
+body button.btn-danger {
+  background: white; color: #b91c1c; border: 1px solid #fecaca; padding: 6px 12px;
+  border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+body button.btn-danger:hover:not(:disabled) { background: #fef2f2; }
+body button.btn-danger:disabled { opacity: .55; cursor: not-allowed; }
+
+body button.btn-info {
+  background: white; color: #1d4ed8; border: 1px solid #93c5fd; padding: 6px 12px;
+  border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+body button.btn-info:hover:not(:disabled) { background: #eff6ff; }
+body button.btn-info:disabled { opacity: .55; cursor: not-allowed; }

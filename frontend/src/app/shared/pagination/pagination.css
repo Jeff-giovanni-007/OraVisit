@@ -1,0 +1,16 @@
+.pager {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; padding: 10px 14px; font-size: 13px; color: #64748b;
+}
+.pages { display: flex; align-items: center; gap: 4px; }
+.pages button {
+  min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 6px;
+  background: white; color: #1e293b; cursor: pointer; font-size: 13px;
+}
+.pages button:hover:not(:disabled):not(.current) { background: #f1f5f9; }
+.pages button.current { background: #06202b; border-color: #06202b; color: white; cursor: default; }
+.pages button:disabled { opacity: .45; cursor: not-allowed; }
+.gap { padding: 0 4px; }
+.size { display: flex; align-items: center; gap: 8px; }
+.size select { padding: 5px 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; }
+.size select:focus { border-color: var(--ora-green-200); }

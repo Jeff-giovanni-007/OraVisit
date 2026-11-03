@@ -1,0 +1,28 @@
+@if (totalElements() > 0) {
+  <nav class="pager" aria-label="Pagination">
+    <span class="range">{{ first() }}–{{ last() }} sur {{ totalElements() }}</span>
+
+    <div class="pages">
+      <button type="button" (click)="go(page() - 1)" [disabled]="page() === 0" aria-label="Page précédente">‹</button>
+      @for (p of pages(); track $index) {
+        @if (p === null) {
+          <span class="gap">…</span>
+        } @else {
+          <button type="button" [class.current]="p === page()"
+                  [attr.aria-current]="p === page() ? 'page' : null" (click)="go(p)">{{ p + 1 }}</button>
+        }
+      }
+      <button type="button" (click)="go(page() + 1)" [disabled]="page() >= totalPages() - 1"
+              aria-label="Page suivante">›</button>
+    </div>
+
+    <label class="size">
+      Lignes par page
+      <select (change)="changeSize($any($event.target).value)">
+        @for (s of sizes(); track s) {
+          <option [value]="s" [selected]="s === size()">{{ s }}</option>
+        }
+      </select>
+    </label>
+  </nav>
+}

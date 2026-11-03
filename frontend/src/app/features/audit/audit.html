@@ -1,0 +1,134 @@
+<div class="page">
+  <div class="head">
+    <div>
+      <h1>Audit</h1>
+      <p class="sub">Qui a fait quoi, et à quel moment</p>
+    </div>
+    <button type="button" class="btn-export" (click)="downloadExcel()" [disabled]="exporting()"
+            title="Télécharge les lignes correspondant aux filtres (toutes si aucun filtre)">
+      {{ exporting() ? 'Téléchargement...' : 'Télécharger en Excel' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="err">{{ error() }}</div>
+  }
+
+  <div class="bar">
+    <input class="search" [(ngModel)]="filters.q" placeholder="Rechercher un auteur, matricule, visiteur, détail..."
+           (input)="onSearchInput()" (keyup.enter)="applyFilters()" />
+    <select [(ngModel)]="filters.action" (ngModelChange)="applyFilters()">
+      <option value="">Toutes les actions</option>
+      @for (a of actions; track a) {
+        <option [value]="a">{{ actionLabel[a] }}</option>
+      }
+    </select>
+    <select [(ngModel)]="filters.targetType" (ngModelChange)="applyFilters()">
+      <option value="">Tous les objets</option>
+      @for (t of targets; track t) {
+        <option [value]="t">{{ targetLabel[t] }}</option>
+      }
+    </select>
+    <label class="date">Du <input type="date" [(ngModel)]="filters.dateFrom" (ngModelChange)="applyFilters()"
+                                  [attr.max]="filters.dateTo || null" /></label>
+    <label class="date">Au <input type="date" [(ngModel)]="filters.dateTo" (ngModelChange)="applyFilters()"
+                                  [attr.min]="filters.dateFrom || null" /></label>
+    @if (actor(); as a) {
+      <span class="chip">Auteur : {{ a.label }}
+        <button type="button" (click)="clearActor()" aria-label="Retirer le filtre sur l'auteur">✕</button>
+      </span>
+    }
+    <button type="button" class="btn-reset" (click)="resetFilters()" [disabled]="!hasFilters()">Réinitialiser</button>
+    @if (loading()) { <span class="muted">Chargement...</span> }
+  </div>
+
+  <div class="table-wrap">
+    <table #table>
+      <colgroup>
+        <col class="col-when" />
+        <col class="col-who" />
+        <col class="col-what" />
+        <col class="col-target" />
+        <col class="col-details" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Date/heure de l'action</th>
+          <th>Auteur</th>
+          <th>Action effectuée</th>
+          <th>Objet concerné</th>
+          <th>Détails</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of logs()?.content ?? []; track l.id) {
+          <tr [class.failed]="l.outcome === 'FAILURE'">
+            <td class="nowrap">{{ l.occurredAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td class="wrap">
+              <button type="button" class="link" (click)="filterByActor(l)"
+                      [title]="l.actorId != null ? 'Ne garder que les actions de cet auteur' : 'Rechercher ce matricule'">
+                {{ l.actorName || 'Inconnu' }}
+              </button>
+              <span class="hint">
+                {{ l.actorMatricule }}{{ l.actorRole ? ' · ' + roleLabel[l.actorRole] : '' }}
+              </span>
+            </td>
+            <td class="wrap">
+              {{ actionLabel[l.action] }}
+              @if (l.outcome === 'FAILURE') {
+                <span class="badge ko">{{ outcomeLabel[l.outcome] }}</span>
+              }
+            </td>
+            <td>
+              <span class="tag">{{ targetLabel[l.targetType] }}</span>
+              @if (l.targetLabel) {
+                <span class="target" [title]="l.targetLabel">{{ l.targetLabel }}</span>
+              }
+            </td>
+            <td>
+              <button type="button" class="btn-info" (click)="detail.set(l)">Détail</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="empty">
+              {{ hasFilters() ? 'Aucune action ne correspond aux filtres' : 'Aucune action enregistrée' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (logs(); as p) {
+      <app-pagination [page]="p.page" [size]="p.size" [totalElements]="p.totalElements"
+                      [totalPages]="p.totalPages" (pageChange)="goToPage($event)"
+                      (sizeChange)="changePageSize($event)" />
+    }
+  </div>
+</div>
+
+@if (detail(); as l) {
+  <div class="overlay" (click)="detail.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-h">
+        <h2>Action #{{ l.id }}</h2>
+        <button type="button" class="x" (click)="detail.set(null)">✕</button>
+      </div>
+      <div class="info-grid">
+        <div><span>Date/heure de l'action</span><strong>{{ l.occurredAt | date:'dd/MM/yyyy HH:mm:ss' }}</strong></div>
+        <div><span>Action</span><strong>{{ actionLabel[l.action] }}</strong></div>
+        <div><span>Issue</span><strong>{{ outcomeLabel[l.outcome] }}</strong></div>
+        <div><span>Auteur</span><strong>{{ l.actorName || 'Inconnu' }}</strong></div>
+        <div><span>Matricule</span><strong>{{ l.actorMatricule }}</strong></div>
+        <div><span>Rôle</span><strong>{{ l.actorRole ? roleLabel[l.actorRole] : '—' }}</strong></div>
+        <div><span>Objet</span><strong>{{ targetLabel[l.targetType] }}</strong></div>
+        <div><span>Identifiant</span><strong>{{ l.targetId != null ? '#' + l.targetId : '—' }}</strong></div>
+        <div class="full"><span>Concerné</span><strong>{{ l.targetLabel || '—' }}</strong></div>
+        <div class="full"><span>Détails</span><strong>{{ l.details || '—' }}</strong></div>
+        <div><span>Adresse IP</span><strong>{{ l.ipAddress || '—' }}</strong></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-sec" (click)="detail.set(null)">Fermer</button>
+      </div>
+    </div>
+  </div>
+}

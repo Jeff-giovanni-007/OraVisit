@@ -1,0 +1,56 @@
+<div class="overlay" (click)="closed.emit()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="employee-edit-title"
+       (click)="$event.stopPropagation()">
+    <div class="modal-h">
+      <h2 id="employee-edit-title">Modifier l'employé</h2>
+      <button type="button" class="x" aria-label="Fermer" (click)="closed.emit()">✕</button>
+    </div>
+    <div class="edit-summary">
+      Rôle : <strong>{{ roleLabels[employee().role] }}</strong>
+    </div>
+    @if (error()) { <div class="edit-error">{{ error() }}</div> }
+    <form (ngSubmit)="save()">
+      <div class="edit-form">
+        <div>
+          <label for="employee-matricule">Matricule *</label>
+          <input id="employee-matricule" name="matricule" [(ngModel)]="form.matricule" [disabled]="isSelf()"
+                 maxlength="20" />
+          @if (isSelf()) {
+            <p class="hint">Vous ne pouvez pas modifier votre propre matricule.</p>
+          }
+        </div>
+        <div>
+          <label for="employee-direction">Direction *</label>
+          <select id="employee-direction" name="direction" [(ngModel)]="form.direction">
+            @for (k of directions; track k) {
+              <option [value]="k">{{ dirLabels[k] }}</option>
+            }
+          </select>
+        </div>
+        <div class="full"><label for="employee-poste">Poste *</label>
+          <input id="employee-poste" name="poste" [(ngModel)]="form.poste" maxlength="100"
+                 placeholder="Ex. Chargée de clientèle particuliers" /></div>
+        <div><label for="employee-last">Nom *</label>
+          <input id="employee-last" name="lastName" [(ngModel)]="form.lastName" maxlength="60" /></div>
+        <div><label for="employee-first">Prénom *</label>
+          <input id="employee-first" name="firstName" [(ngModel)]="form.firstName" maxlength="60" /></div>
+        <div><label for="employee-email">Email *</label>
+          <input id="employee-email" name="email" type="email" [(ngModel)]="form.email" maxlength="120" /></div>
+        <div><label for="employee-phone">Téléphone *</label>
+          <input id="employee-phone" name="phone" [(ngModel)]="form.phone" maxlength="30" /></div>
+        @if (employee().role !== 'DEFAULT' && !employee().passwordSet) {
+          <p class="hint full">
+            Mot de passe pas encore défini : si le matricule ou l'email change, un nouveau lien pour le définir
+            est envoyé à l'adresse enregistrée.
+          </p>
+        }
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="cancel" (click)="closed.emit()">Annuler</button>
+        <button type="submit" class="save" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

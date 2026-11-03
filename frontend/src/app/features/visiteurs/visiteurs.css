@@ -1,0 +1,27 @@
+.head { margin-bottom: 16px; }
+h1 { font-size: 22px; color: #06202b; }
+.sub { color: #64748b; font-size: 13px; margin-top: 4px; }
+.ok { background: #ecfdf5; color: #047857; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+.bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+input { flex: 1; max-width: 360px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
+button { background: #06202b; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+.table-wrap { background: white; border-radius: 10px; border: 1px solid #e2e8f0; overflow: auto; }
+table { width: 100%; border-collapse: collapse; }
+/* Column widths are set by spaceColumns() (shared/space-columns.ts); until then the button columns hug their content. */
+.col-scan, .col-acts { width: 1px; }
+table.measuring th, table.measuring td { white-space: nowrap; }
+th { text-align: left; padding: 12px; font-size: 12px; color: #64748b; background: #f8fafc; white-space: nowrap; }
+td { padding: 12px; font-size: 13px; border-top: 1px solid #f1f5f9; }
+td.nowrap { white-space: nowrap; }
+/* 38px + the 12px left padding of the actions cell = 50px between Voir and Modifier. */
+th.scan, td.scan { text-align: right; padding-right: 38px; }
+.empty { text-align: center; color: #94a3b8; padding: 28px !important; }
+.muted { color: #64748b; font-size: 13px; }
+.err { background: #fef2f2; color: #dc2626; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+.btn-id { padding: 6px 12px; font-size: 12px; background: white; color: #06202b; border: 1px solid #e2e8f0; }
+.btn-id.missing { color: var(--ora-green); border-color: var(--ora-green-200); background: var(--ora-green-50); }
+.modal-h .x { background: none; color: #94a3b8; padding: 0; }
+.modal-h .x:hover { color: #475569; }
+.modal-body { padding: 16px 20px 20px; }
+.row-acts { white-space: nowrap; }
+.row-acts button + button { margin-left: 50px; }

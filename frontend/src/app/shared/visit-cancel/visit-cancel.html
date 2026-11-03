@@ -1,0 +1,30 @@
+<div class="overlay" (click)="closed.emit()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="visit-cancel-title"
+       (click)="$event.stopPropagation()">
+    <div class="modal-h">
+      <h2 id="visit-cancel-title">Annuler la visite #{{ visit().id }}</h2>
+      <button type="button" class="x" aria-label="Fermer" (click)="closed.emit()">✕</button>
+    </div>
+    <div class="edit-summary">
+      <strong>{{ visit().visitor.fullName }}</strong>
+      · badge {{ visit().badgeNumber }}
+      · arrivée le {{ visit().checkInAt | date:'dd/MM/yyyy HH:mm' }}
+    </div>
+    @if (error()) { <div class="edit-error">{{ error() }}</div> }
+    <form (ngSubmit)="confirm()">
+      <div class="edit-form">
+        <div class="full">
+          <label for="visit-cancel-reason">Motif de l'annulation *</label>
+          <input id="visit-cancel-reason" name="reason" [(ngModel)]="reason" maxlength="255"
+                 autocomplete="off" placeholder="Ex. le visiteur est reparti sans être reçu" />
+        </div>
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="cancel" (click)="closed.emit()">Retour</button>
+        <button type="submit" class="confirm" [disabled]="saving()">
+          {{ saving() ? 'Annulation...' : 'Annuler la visite' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

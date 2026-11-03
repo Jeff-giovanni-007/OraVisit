@@ -1,0 +1,26 @@
+@if (confirm.request(); as r) {
+  <div class="overlay confirm-overlay" (click)="confirm.answer(false)">
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title"
+         aria-describedby="confirm-message" (click)="$event.stopPropagation()">
+      <div class="modal-h">
+        <h2 id="confirm-title">{{ r.title }}</h2>
+        <button type="button" class="x" aria-label="Fermer" (click)="confirm.answer(false)">✕</button>
+      </div>
+      <div class="confirm-body" id="confirm-message">
+        <p class="message">{{ r.message }}</p>
+        @for (line of r.details ?? []; track $index) {
+          <p class="detail">{{ line }}</p>
+        }
+        @if (r.irreversible) {
+          <p class="warn">Cette action est irréversible.</p>
+        }
+      </div>
+      <div class="edit-actions">
+        <button #cancel type="button" class="cancel" (click)="confirm.answer(false)">Annuler</button>
+        <button type="button" class="confirm" [class.danger]="r.tone !== 'primary'" (click)="confirm.answer(true)">
+          {{ r.confirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

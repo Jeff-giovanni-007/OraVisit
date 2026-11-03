@@ -1,0 +1,9 @@
+.modal {
+  max-width: 520px;
+}
+
+.edit-actions .confirm {
+  background: #b91c1c;
+  color: white;
+  border: none;
+}

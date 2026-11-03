@@ -1,0 +1,27 @@
+<div class="identity">
+  <div class="head">
+    <span class="title">Pièce d'identité numérisée</span>
+    <label class="upload" [class.disabled]="uploading()">
+      {{ uploading() ? 'Envoi...' : (url() || hasDocument() ? 'Remplacer' : 'Ajouter') }}
+      <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="uploading()" hidden />
+    </label>
+  </div>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Chargement...</p>
+  } @else if (url(); as src) {
+    @if (isPdf()) {
+      <a class="pdf" [href]="src" target="_blank" rel="noopener">Ouvrir le PDF</a>
+    } @else {
+      <a [href]="src" target="_blank" rel="noopener" title="Ouvrir en grand">
+        <img [src]="src" alt="Pièce d'identité du visiteur" />
+      </a>
+    }
+  } @else if (!hasDocument()) {
+    <p class="muted">Aucune pièce jointe. Formats acceptés : JPEG, PNG, WEBP ou PDF (5 Mo max).</p>
+  }
+</div>

@@ -1,0 +1,40 @@
+<div class="overlay" (click)="closed.emit()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="visitor-edit-title"
+       (click)="$event.stopPropagation()">
+    <div class="modal-h">
+      <h2 id="visitor-edit-title">Modifier le visiteur</h2>
+      <button type="button" class="x" aria-label="Fermer" (click)="closed.emit()">✕</button>
+    </div>
+    @if (error()) { <div class="edit-error">{{ error() }}</div> }
+    <form (ngSubmit)="save()">
+      <div class="edit-form">
+        <div><label for="visitor-last">Nom *</label>
+          <input id="visitor-last" name="lastName" [(ngModel)]="form.lastName" maxlength="60" /></div>
+        <div><label for="visitor-first">Prénom *</label>
+          <input id="visitor-first" name="firstName" [(ngModel)]="form.firstName" maxlength="60" /></div>
+        <div><label for="visitor-phone">Téléphone *</label>
+          <input id="visitor-phone" name="phone" [(ngModel)]="form.phone" maxlength="30" /></div>
+        <div><label for="visitor-email">Email</label>
+          <input id="visitor-email" name="email" type="email" [(ngModel)]="form.email" maxlength="120" /></div>
+        <div>
+          <label for="visitor-doc-type">Type pièce *</label>
+          <select id="visitor-doc-type" name="identityDocumentType" [(ngModel)]="form.identityDocumentType">
+            @for (t of documentTypes; track t) {
+              <option [value]="t">{{ documentLabel[t] }}</option>
+            }
+          </select>
+        </div>
+        <div><label for="visitor-doc-number">N° pièce *</label>
+          <input id="visitor-doc-number" name="identityCardNumber" [(ngModel)]="form.identityCardNumber"
+                 maxlength="40" /></div>
+        <p class="hint full">La pièce identifie le visiteur : elle ne peut pas être celle d'un autre visiteur.</p>
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="cancel" (click)="closed.emit()">Annuler</button>
+        <button type="submit" class="save" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

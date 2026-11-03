@@ -1,0 +1,160 @@
+<div class="page">
+  <h1>Employés</h1>
+  <p class="sub">Gestion des comptes, import et export Excel</p>
+
+  @if (message() || error()) {
+    <div class="flash">
+      @if (message()) { <div class="ok">{{ message() }}</div> }
+      @if (error()) { <div class="err">{{ error() }}</div> }
+    </div>
+  }
+
+  <section class="panel">
+    <h2>Import Excel</h2>
+    <p class="hint">Colonnes : Matricule, Prénom, Nom, Email, Téléphone, Direction, Poste (obligatoires) et Rôle (facultatif, Employé par défaut), comme dans le fichier téléchargé.</p>
+    <div class="row">
+      <button class="btn-primary" type="button" (click)="fileInput.click()" [disabled]="importing()">
+        {{ importing() ? 'Import...' : 'Importer un fichier Excel' }}
+      </button>
+      <input #fileInput type="file" accept=".xlsx,.xls" (change)="onFile($event)" hidden />
+    </div>
+    @if (importResult(); as r) {
+      <ul class="errs">@for (e of r.errors; track e) { <li>{{ e }}</li> }</ul>
+    }
+  </section>
+
+  <section class="panel">
+    <h2>Ajouter un employé</h2>
+    <div class="grid">
+      <input [(ngModel)]="form.matricule" placeholder="Matricule *" maxlength="20" />
+      <input [(ngModel)]="form.firstName" placeholder="Prénom *" maxlength="60" />
+      <input [(ngModel)]="form.lastName" placeholder="Nom *" maxlength="60" />
+      <input [(ngModel)]="form.email" type="email" placeholder="Email *" maxlength="120" />
+      <input [(ngModel)]="form.phone" placeholder="Téléphone *" maxlength="30" />
+      <select [(ngModel)]="form.role" aria-label="Rôle" title="Rôle">
+        @for (r of roles; track r) {
+          <option [value]="r">{{ roleLabels[r] }}</option>
+        }
+      </select>
+      <select [(ngModel)]="form.direction" [class.placeholder]="!form.direction" aria-label="Direction">
+        <option value="" disabled>Direction *</option>
+        @for (k of directions; track k) {
+          <option [value]="k">{{ dirLabels[k] }}</option>
+        }
+      </select>
+      <input [(ngModel)]="form.poste" placeholder="Poste *" maxlength="100" />
+    </div>
+    @if (form.role !== 'DEFAULT') {
+      <p class="hint info">
+        L'employé recevra à son adresse e-mail un lien sécurisé pour définir lui-même son mot de passe.
+      </p>
+    }
+    <button class="btn-primary create" type="button" (click)="addOne()" [disabled]="saving()">
+      {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+    </button>
+  </section>
+
+  <section class="panel">
+    <div class="row list-head">
+      <h2>Liste des employés</h2>
+      @if (loading()) { <span class="muted">Chargement...</span> }
+      <button class="btn-primary" type="button" (click)="downloadExcel()" [disabled]="exporting()"
+              title="Télécharge les employés correspondant aux filtres (tous si aucun filtre)">
+        {{ exporting() ? 'Téléchargement...' : 'Télécharger en Excel' }}
+      </button>
+    </div>
+    <div class="row filters">
+      <input [(ngModel)]="filters.q" placeholder="Rechercher un matricule, nom, email, poste..."
+             (input)="onSearchInput()" (keyup.enter)="applyFilters()" />
+      <select [(ngModel)]="filters.role" (ngModelChange)="applyFilters()">
+        <option value="">Tous rôles</option>
+        @for (r of roles; track r) {
+          <option [value]="r">{{ roleLabels[r] }}</option>
+        }
+      </select>
+      <select [(ngModel)]="filters.direction" (ngModelChange)="applyFilters()">
+        <option value="">Toutes directions</option>
+        @for (k of directions; track k) {
+          <option [value]="k">{{ dirLabels[k] }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="table-box">
+      <div class="table-wrap">
+        <table #table>
+          <colgroup>
+            <col class="col-matricule" />
+            <col class="col-employee" />
+            <col class="col-poste" />
+            <col class="col-role" />
+            <col class="col-direction" />
+            <col class="col-password" />
+            <col class="col-acts" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Matricule</th><th>Employé</th><th>Poste</th><th>Rôle</th><th>Direction</th>
+              <th>Mot de passe</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of employees()?.content ?? []; track e.id) {
+              <tr>
+                <td>{{ e.matricule }}</td>
+                <td class="wrap">{{ e.fullName }}<span class="email">{{ e.email }}</span></td>
+                <td class="wrap">{{ e.poste }}</td>
+                <td>
+                  <select class="role" [value]="e.role" (change)="changeRole(e, $event)"
+                          [disabled]="isSelf(e) || busyId() === e.id"
+                          [title]="isSelf(e) ? 'Vous ne pouvez pas modifier votre propre rôle' : ''">
+                    @for (r of roles; track r) {
+                      <option [value]="r" [selected]="r === e.role">{{ roleLabels[r] }}</option>
+                    }
+                  </select>
+                </td>
+                <td class="wrap">{{ dirLabels[e.direction] }}</td>
+                <td>
+                  @if (e.role === 'DEFAULT') {
+                    <span class="muted" title="Aucun accès à l'application">—</span>
+                  } @else if (e.passwordSet) {
+                    <span class="tag on">Défini</span>
+                  } @else {
+                    <span class="tag pending">En attente</span>
+                  }
+                </td>
+                <td class="acts">
+                  @if (e.role !== 'DEFAULT') {
+                    <button class="btn-info" type="button" (click)="sendLink(e)" [disabled]="busyId() === e.id"
+                            [title]="e.passwordSet ? 'Envoyer un lien pour choisir un nouveau mot de passe' : 'Envoyer le lien de définition du mot de passe'">
+                      {{ e.passwordSet ? 'Lien de réinitialisation' : 'Envoyer le lien' }}
+                    </button>
+                  }
+                  <button class="btn-edit" type="button" (click)="editing.set(e)" [disabled]="busyId() === e.id">
+                    Modifier
+                  </button>
+                  <button class="btn-danger" type="button" (click)="deleteEmployee(e)"
+                          [disabled]="isSelf(e) || busyId() === e.id"
+                          [title]="isSelf(e) ? 'Vous ne pouvez pas supprimer votre propre compte' : 'Supprimer cet employé'">
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty">{{ filters.q.trim() || filters.role || filters.direction ? 'Aucun employé ne correspond aux filtres' : 'Aucun employé' }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (employees(); as p) {
+        <app-pagination [page]="p.page" [size]="p.size" [totalElements]="p.totalElements"
+                        [totalPages]="p.totalPages" (pageChange)="goToPage($event)"
+                        (sizeChange)="changePageSize($event)" />
+      }
+    </div>
+  </section>
+</div>
+
+@if (editing(); as e) {
+  <app-employee-edit [employee]="e" (saved)="onEmployeeSaved($event)" (closed)="editing.set(null)" />
+}

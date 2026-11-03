@@ -1,0 +1,43 @@
+# Secrets et configuration locale
+.env
+.env.*
+!.env.example
+
+# Backend
+backend/target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/out-tsc/
+
+# Outils et systeme
+.idea/
+*.iml
+.vscode/
+.claude/
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.DS_Store
+Thumbs.db
+*.log
+
+# Fichiers verrou de Microsoft Office (document ouvert)
+~$*
+
+# Donnees personnelles (vraies adresses e-mail des comptes TST001-TST008)
+Import-Excel/employes-import-valide.xlsx
+
+# Sauvegardes locales
+Presentation-OraVisit (avant mise a jour).pptx
+
+# Video trop lourde pour GitHub (limite de 100 Mo)
+*.MP4
+*.mp4
+
+# Captures avec des donnees de personnes (non publiees)
+frontend/src/screenshots/

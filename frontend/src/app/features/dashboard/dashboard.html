@@ -1,0 +1,295 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h1>Visites</h1>
+      <p class="sub">
+        {{ auth.isAdmin()
+          ? 'Indicateurs du jour et suivi de toutes les visites'
+          : 'Vos indicateurs du jour et les visites que vous avez enregistrées' }}
+      </p>
+    </div>
+    <div class="top-acts">
+      <button type="button" class="btn-export" (click)="downloadExcel()" [disabled]="exporting()"
+              title="Télécharge les visites correspondant aux filtres (toutes si aucun filtre)">
+        {{ exporting() ? 'Téléchargement...' : 'Télécharger en Excel' }}
+      </button>
+      <button class="btn-primary" (click)="openModal()">Enregistrer une visite</button>
+    </div>
+  </div>
+
+  @if (message()) { <div class="success">{{ message() }}</div> }
+  @if (erreur()) { <div class="error">{{ erreur() }}</div> }
+
+  <div class="stats">
+    <div class="card"><div class="lbl">Aujourd'hui</div><div class="val">{{ stats()?.visitsToday ?? '—' }}</div></div>
+    <div class="card"><div class="lbl">En cours / présents</div><div class="val">{{ stats()?.activeVisits ?? '—' }}</div></div>
+    <div class="card"><div class="lbl">Terminées (jour)</div><div class="val">{{ stats()?.completedToday ?? '—' }}</div></div>
+    <div class="card"><div class="lbl">Annulées (jour)</div><div class="val">{{ stats()?.cancelledToday ?? '—' }}</div></div>
+    @if (stats()?.totalVisitors != null) {
+      <div class="card"><div class="lbl">Total visiteurs</div><div class="val">{{ stats()?.totalVisitors }}</div></div>
+    }
+    @if (stats()?.totalVisits != null) {
+      <div class="card"><div class="lbl">Total visites</div><div class="val">{{ stats()?.totalVisits }}</div></div>
+    }
+    @if (stats()?.totalEmployees != null) {
+      <div class="card"><div class="lbl">Total employés</div><div class="val">{{ stats()?.totalEmployees }}</div></div>
+    }
+  </div>
+
+  <div class="bar">
+    <input class="search" [(ngModel)]="filters.q" placeholder="Rechercher visiteur, hôte, badge, motif..."
+           (input)="onSearchInput()" (keyup.enter)="applyFilters()" />
+    <select [(ngModel)]="filters.status" (ngModelChange)="applyFilters()">
+      <option value="">Tous statuts</option>
+      @for (s of statuses; track s) {
+        <option [value]="s">{{ statusLabel[s] }}</option>
+      }
+    </select>
+    <select [(ngModel)]="filters.direction" (ngModelChange)="applyFilters()">
+      <option value="">Toutes directions</option>
+      @for (d of directions; track d) {
+        <option [value]="d">{{ dirLabel[d] }}</option>
+      }
+    </select>
+    <label class="date">Du <input type="date" [(ngModel)]="filters.dateFrom" (ngModelChange)="applyFilters()"
+                                  [attr.max]="filters.dateTo || null" /></label>
+    <label class="date">Au <input type="date" [(ngModel)]="filters.dateTo" (ngModelChange)="applyFilters()"
+                                  [attr.min]="filters.dateFrom || null" /></label>
+    <button type="button" class="btn-reset" (click)="resetFilters()" [disabled]="!hasFilters()">Réinitialiser</button>
+    @if (loading()) { <span class="muted">Chargement...</span> }
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Arrivée</th>
+          <th>Visiteur</th>
+          <th>Téléphone</th>
+          <th>Badge</th>
+          <th>Hôte</th>
+          <th>Direction</th>
+          <th>Motif</th>
+          <th>Statut</th>
+          <th>Durée</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of visits()?.content ?? []; track v.id) {
+          <tr>
+            <td class="nowrap">{{ v.checkInAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <button class="link" type="button" (click)="detail.set(v)">
+                {{ v.visitor.fullName }}
+              </button>
+            </td>
+            <td>{{ v.visitor.phone }}</td>
+            <td>{{ v.badgeNumber }}</td>
+            <td>{{ v.hostEmployee.fullName }}</td>
+            <td>{{ dirLabel[v.direction] }}</td>
+            <td>{{ v.purpose }}</td>
+            <td><span class="badge" [class]="statusClass[v.status]">{{ statusLabel[v.status] }}</span></td>
+            <td class="nowrap">{{ v.durationMinutes | duration }}</td>
+            <td class="acts nowrap">
+              <button class="btn-info" type="button" (click)="detail.set(v)">Détail</button>
+              <button class="btn-edit" type="button" (click)="editVisit(v)">Modifier</button>
+              <button class="btn-danger" type="button" (click)="deleteVisit(v)">Supprimer</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="10" class="empty">{{ hasFilters() ? 'Aucune visite ne correspond aux filtres' : 'Aucune visite' }}</td></tr>
+        }
+      </tbody>
+    </table>
+    @if (visits(); as p) {
+      <app-pagination [page]="p.page" [size]="p.size" [totalElements]="p.totalElements"
+                      [totalPages]="p.totalPages" (pageChange)="goToPage($event)"
+                      (sizeChange)="changePageSize($event)" />
+    }
+  </div>
+</div>
+
+@if (modal()) {
+  <div class="overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-h">
+        <h2>Nouvelle visite</h2>
+        <button type="button" class="x" (click)="closeModal()">✕</button>
+      </div>
+      @if (formError()) { <div class="error">{{ formError() }}</div> }
+      <div class="grid">
+        <div class="full">
+          <label>Visiteur *</label>
+          @if (selectedVisitor(); as v) {
+            <div class="visitor-card">
+              <div>
+                <strong>{{ v.fullName }}</strong>
+                <div>{{ documentLabel[v.identityDocumentType] }} {{ v.identityCardNumber }} · {{ v.phone }}</div>
+                <div class="hint">
+                  {{ v.visitCount }} visite{{ v.visitCount > 1 ? 's' : '' }} enregistrée{{ v.visitCount > 1 ? 's' : '' }}{{ auth.isAdmin() ? '' : ' par vous' }}
+                  · pièce numérisée : {{ v.hasIdentityDocument ? 'oui' : 'non' }}
+                </div>
+              </div>
+              <button type="button" class="btn-sec" (click)="changeVisitor()">Changer</button>
+            </div>
+          } @else {
+            <div class="lookup">
+              <input [(ngModel)]="visitorQuery" (input)="onVisitorQuery()" autocomplete="off"
+                     placeholder="Visiteur déjà venu ? Nom, téléphone ou n° de pièce..." />
+              @if (visitorResults().length) {
+                <ul>
+                  @for (v of visitorResults(); track v.id) {
+                    <li>
+                      <button type="button" (click)="pickVisitor(v)">
+                        <strong>{{ v.fullName }}</strong>
+                        <span class="hint">{{ documentLabel[v.identityDocumentType] }} {{ v.identityCardNumber }} · {{ v.phone }} · {{ v.visitCount }} visite{{ v.visitCount > 1 ? 's' : '' }}{{ auth.isAdmin() ? '' : ' par vous' }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+            <p class="hint">
+              {{ visitorSearched() && !visitorResults().length
+                ? 'Aucun visiteur trouvé : saisissez un nouveau visiteur ci-dessous.'
+                : 'Sinon, saisissez un nouveau visiteur ci-dessous.' }}
+            </p>
+          }
+        </div>
+        @if (!selectedVisitor()) {
+          <div><label>Nom *</label><input [(ngModel)]="form.visitorLastName" maxlength="60" /></div>
+          <div><label>Prénom *</label><input [(ngModel)]="form.visitorFirstName" maxlength="60" /></div>
+          <div><label>Téléphone *</label><input [(ngModel)]="form.visitorPhone" maxlength="30" /></div>
+          <div><label>Email</label><input [(ngModel)]="form.visitorEmail" type="email" maxlength="120" /></div>
+          <div>
+            <label>Type pièce *</label>
+            <select [ngModel]="form.identityDocumentType" (ngModelChange)="onDocumentTypeChange($event)">
+              @for (t of documentTypes; track t) {
+                <option [value]="t">{{ documentLabel[t] }}</option>
+              }
+            </select>
+          </div>
+          <div><label>N° pièce *</label><input [(ngModel)]="form.identityCardNumber" (input)="onDocumentChange()"
+                                              maxlength="40" /></div>
+          @if (existingVisitor(); as e) {
+            <div class="full existing">
+              <span>
+                Cette pièce appartient déjà à <strong>{{ e.fullName }}</strong>
+                ({{ e.visitCount }} visite{{ e.visitCount > 1 ? 's' : '' }}{{ auth.isAdmin() ? '' : ' par vous' }}). Utilisez sa fiche pour éviter une ressaisie ;
+                sinon, les informations saisies mettront sa fiche à jour.
+              </span>
+              <button type="button" class="btn-sec" (click)="pickVisitor(e)">Utiliser cette fiche</button>
+            </div>
+          }
+        }
+        <div class="full">
+          <label>Pièce d'identité numérisée (photo ou scan) *</label>
+          @if (identityOnFile()) {
+            <p class="hint">Une pièce est déjà enregistrée pour ce visiteur ; un nouveau fichier la remplacera.</p>
+          }
+          <div class="id-file">
+            @if (identityFile) {
+              @if (identityPreview(); as preview) {
+                <img [src]="preview" alt="Aperçu de la pièce d'identité" />
+              }
+              <span class="file-name">{{ identityFile.name }}</span>
+              <button type="button" class="btn-sec" (click)="removeIdentityFile()">Retirer</button>
+            } @else {
+              <label class="file-btn">
+                Joindre la pièce
+                <input type="file" [accept]="identityAccept" (change)="onIdentityFile($event)" hidden />
+              </label>
+              <span class="hint">JPEG, PNG, WEBP ou PDF — 5 Mo max</span>
+            }
+          </div>
+        </div>
+        <div class="emp">
+          <label>Nom de l'employé hôte *</label>
+          <input [(ngModel)]="empName" (input)="onSearchEmp('name')" autocomplete="off"
+                 placeholder="Taper pour chercher..." />
+          @if (empField() === 'name' && suggestions().length) {
+            <ul>
+              @for (e of suggestions(); track e.id) {
+                <li><button type="button" (click)="pickEmp(e)">{{ e.fullName }} — {{ e.matricule }}<small>{{ e.poste }}</small></button></li>
+              }
+            </ul>
+          }
+        </div>
+        <div class="emp">
+          <label>Matricule *</label>
+          <input [(ngModel)]="empMatricule" (input)="onSearchEmp('matricule')" autocomplete="off"
+                 placeholder="Ex. EMP2030" />
+          @if (empField() === 'matricule' && suggestions().length) {
+            <ul>
+              @for (e of suggestions(); track e.id) {
+                <li><button type="button" (click)="pickEmp(e)">{{ e.matricule }} — {{ e.fullName }}<small>{{ e.poste }}</small></button></li>
+              }
+            </ul>
+          }
+        </div>
+        <div><label>Badge *</label><input [(ngModel)]="form.badgeNumber" maxlength="20" /></div>
+        <div class="full"><label>Motif *</label><input [(ngModel)]="form.purpose" maxlength="255" /></div>
+      </div>
+      <div class="actions">
+        <button class="btn-sec" type="button" (click)="closeModal()">Annuler</button>
+        <button class="btn-primary" type="button" (click)="createVisit()" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (detail(); as v) {
+  <div class="overlay" (click)="detail.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-h">
+        <h2>Détail visite #{{ v.id }}</h2>
+        <button type="button" class="x" (click)="detail.set(null)">✕</button>
+      </div>
+      <div class="info-grid">
+        <div><span>Visiteur</span><strong>{{ v.visitor.fullName }}</strong></div>
+        <div><span>Téléphone</span><strong>{{ v.visitor.phone }}</strong></div>
+        <div><span>Pièce</span><strong>{{ documentLabel[v.visitor.identityDocumentType] }} {{ v.visitor.identityCardNumber }}</strong></div>
+        <div><span>Badge</span><strong>{{ v.badgeNumber }}</strong></div>
+        <div><span>Hôte</span><strong>{{ v.hostEmployee.fullName }} ({{ v.hostEmployee.matricule }})</strong></div>
+        <div><span>Poste de l'hôte</span><strong>{{ v.hostEmployee.poste }}</strong></div>
+        <div><span>Direction</span><strong>{{ dirLabel[v.direction] }}</strong></div>
+        <div><span>Motif</span><strong>{{ v.purpose }}</strong></div>
+        <div><span>Statut</span><strong>{{ statusLabel[v.status] }}</strong></div>
+        <div><span>Arrivée</span><strong>{{ v.checkInAt | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+        <div><span>Sortie</span><strong>{{ v.checkOutAt ? (v.checkOutAt | date:'dd/MM/yyyy HH:mm') : '—' }}</strong></div>
+        <div><span>Enregistré par</span><strong>{{ v.registeredBy.fullName }}</strong></div>
+        @if (v.durationMinutes != null) {
+          <div><span>Durée</span><strong>{{ v.durationMinutes | duration }}</strong></div>
+        }
+        @if (v.status === 'ANNULEE') {
+          <div><span>Annulée le</span><strong>{{ v.cancelledAt | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+          <div class="full"><span>Motif de l'annulation</span><strong>{{ v.cancellationReason }}</strong></div>
+        }
+      </div>
+      <div class="identity-block">
+        <app-identity-document [visitorId]="v.visitor.id" [hasDocument]="v.visitor.hasIdentityDocument"
+                               (uploaded)="onIdentityUploaded(v)" />
+      </div>
+      <div class="actions">
+        <button class="btn-danger" type="button" style="margin-right:auto" (click)="deleteVisit(v)">Supprimer</button>
+        <button class="btn-edit" type="button" (click)="editVisit(v)">Modifier</button>
+        @if (v.status === 'EN_COURS') {
+          <button class="btn-cancel" type="button" (click)="cancelVisit(v)">Annuler la visite</button>
+          <button class="btn-ok" type="button" (click)="checkout(v)">Marquer sortie</button>
+        }
+        <button class="btn-sec" type="button" (click)="detail.set(null)">Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (editing(); as v) {
+  <app-visit-edit [visit]="v" (saved)="onVisitSaved($event)" (closed)="closeEdit()" />
+}
+
+@if (cancelling(); as v) {
+  <app-visit-cancel [visit]="v" (cancelled)="onVisitCancelled($event)" (closed)="closeCancel()" />
+}

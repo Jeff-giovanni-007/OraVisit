@@ -1,0 +1,17 @@
+<div class="page">
+  <div class="card">
+    <h1>Connexion</h1>
+    @if (erreur()) { <div class="error">{{ erreur() }}</div> }
+    <form (ngSubmit)="submit()">
+      <label for="login-matricule">Matricule</label>
+      <input id="login-matricule" name="matricule" autocomplete="username" [(ngModel)]="matricule"
+             placeholder="Saisissez votre matricule" maxlength="20" />
+      <label for="login-password">Mot de passe</label>
+      <input id="login-password" name="password" type="password" autocomplete="current-password"
+             [(ngModel)]="password" placeholder="Saisissez votre mot de passe" />
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+  </div>
+</div>

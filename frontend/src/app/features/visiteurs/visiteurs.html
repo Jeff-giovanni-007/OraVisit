@@ -1,0 +1,94 @@
+<div class="page">
+  <div class="head">
+    <h1>Visiteurs</h1>
+    <p class="sub">
+      {{ auth.isAdmin()
+        ? "Fiches des visiteurs et pièces d'identité"
+        : "Les visiteurs que vous avez enregistrés ou reçus, et leurs pièces d'identité" }}
+    </p>
+  </div>
+
+  @if (message()) { <div class="ok">{{ message() }}</div> }
+  @if (error()) { <div class="err">{{ error() }}</div> }
+
+  <div class="bar">
+    <input [(ngModel)]="q" (input)="onSearchInput()" (keyup.enter)="search()"
+           placeholder="Rechercher un nom, téléphone, n° de pièce..." />
+    @if (loading()) { <span class="muted">Chargement...</span> }
+  </div>
+
+  <div class="table-wrap">
+    <table #table>
+      <colgroup>
+        <col class="col-name" />
+        <col class="col-phone" />
+        <col class="col-email" />
+        <col class="col-piece" />
+        <col class="col-count" />
+        <col class="col-scan" />
+        <col class="col-acts" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Nom</th><th>Téléphone</th><th>Email</th><th>Pièce</th>
+          @if (auth.isAdmin()) {
+            <th title="Les visiteurs les plus fréquents en premier">Visites ↓</th>
+          } @else {
+            <th title="Visites que vous avez enregistrées ; les visiteurs que vous recevez le plus en premier">Vos visites ↓</th>
+          }
+          <th class="scan">Pièce numérisée</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of visitors()?.content ?? []; track v.id) {
+          <tr>
+            <td>{{ v.fullName }}</td>
+            <td class="nowrap">{{ v.phone }}</td>
+            <td>{{ v.email || '—' }}</td>
+            <td>{{ documentLabel[v.identityDocumentType] }} {{ v.identityCardNumber }}</td>
+            <td>{{ v.visitCount }}</td>
+            <td class="scan">
+              <button type="button" [class]="v.hasIdentityDocument ? 'btn-info' : 'btn-id missing'" (click)="selected.set(v)">
+                {{ v.hasIdentityDocument ? 'Voir' : 'Ajouter' }}
+              </button>
+            </td>
+            <td class="row-acts">
+              <button class="btn-edit" type="button" (click)="editing.set(v)" [disabled]="deletingId() === v.id">
+                Modifier
+              </button>
+              <button class="btn-danger" type="button" (click)="deleteVisitor(v)" [disabled]="deletingId() === v.id">
+                {{ deletingId() === v.id ? 'Suppression...' : 'Supprimer' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="empty">{{ q.trim() ? 'Aucun visiteur ne correspond à la recherche' : 'Aucun visiteur' }}</td></tr>
+        }
+      </tbody>
+    </table>
+    @if (visitors(); as p) {
+      <app-pagination [page]="p.page" [size]="p.size" [totalElements]="p.totalElements"
+                      [totalPages]="p.totalPages" (pageChange)="goToPage($event)"
+                      (sizeChange)="changePageSize($event)" />
+    }
+  </div>
+</div>
+
+@if (selected(); as v) {
+  <div class="overlay" (click)="selected.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-h">
+        <h2>{{ v.fullName }} — {{ documentLabel[v.identityDocumentType] }} {{ v.identityCardNumber }}</h2>
+        <button type="button" class="x" (click)="selected.set(null)">✕</button>
+      </div>
+      <div class="modal-body">
+        <app-identity-document [visitorId]="v.id" [hasDocument]="v.hasIdentityDocument"
+                               (uploaded)="onIdentityUploaded(v)" />
+      </div>
+    </div>
+  </div>
+}
+
+@if (editing(); as v) {
+  <app-visitor-edit [visitor]="v" (saved)="onVisitorSaved($event)" (closed)="editing.set(null)" />
+}
